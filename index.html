@@ -1,0 +1,853 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>แปลซับ PS5</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: mediastream:; connect-src 'self' https://generativelanguage.googleapis.com; manifest-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="แปลซับ PS5">
+<meta name="theme-color" content="#000000">
+<meta name="referrer" content="no-referrer">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-180.png">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#000;color:#eee;font-family:-apple-system,BlinkMacSystemFont,"Thonburi","Sukhumvit Set","Noto Sans Thai",system-ui,sans-serif;-webkit-text-size-adjust:100%;overscroll-behavior:none}
+body{overflow:hidden;-webkit-user-select:none;user-select:none}
+button,input,select,textarea{font:inherit;color:inherit}
+input,textarea,select{-webkit-user-select:text;user-select:text}
+button{background:#222;border:1px solid #444;border-radius:12px;padding:10px 14px;min-height:44px;cursor:pointer}
+button:active{background:#333}
+button.primary{background:#1a7f37;border-color:#2ea043;font-weight:700}
+button.danger{background:#7a1f1f;border-color:#a33}
+button.on{background:#264b7a;border-color:#4d86c9}
+.view{position:fixed;inset:0;display:none}
+.view.active{display:block}
+
+/* ---------- welcome ---------- */
+#welcome{display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;padding-top:calc(24px + env(safe-area-inset-top));gap:16px}
+#welcome.active{display:flex}
+#welcome h1{font-size:34px;margin:0}
+#welcome p{margin:0;color:#aaa;max-width:34em;line-height:1.55}
+#startBtn{font-size:26px;padding:18px 56px;border-radius:18px}
+#welcomeErr{color:#ff8b8b;min-height:1.4em;max-width:34em}
+
+/* ---------- setup ---------- */
+#setup{overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(90px + env(safe-area-inset-bottom))}
+.camStage{position:relative;width:100%;height:56dvh;background:#000;display:flex;align-items:center;justify-content:center;padding-top:env(safe-area-inset-top)}
+#camWrap{position:relative;background:#111;touch-action:none;overflow:hidden}
+#cam{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none;background:#000}
+#cropBox{position:absolute;border:2px solid #ffd60a;box-shadow:0 0 0 9999px rgba(0,0,0,.55);touch-action:none;cursor:move}
+#cropBox .lbl{position:absolute;left:0;top:-22px;font-size:12px;color:#ffd60a;white-space:nowrap;pointer-events:none}
+#cropBox .h{position:absolute;width:40px;height:40px;transform:translate(-50%,-50%);touch-action:none}
+#cropBox .h::after{content:"";position:absolute;left:50%;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;background:#ffd60a;border-radius:50%;border:2px solid #000}
+.h[data-h=nw]{left:0;top:0}.h[data-h=n]{left:50%;top:0}.h[data-h=ne]{left:100%;top:0}
+.h[data-h=e]{left:100%;top:50%}.h[data-h=se]{left:100%;top:100%}.h[data-h=s]{left:50%;top:100%}
+.h[data-h=sw]{left:0;top:100%}.h[data-h=w]{left:0;top:50%}
+#camMsg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;color:#aaa;padding:20px;pointer-events:none}
+.panel{padding:14px 16px;max-width:760px;margin:0 auto}
+.panel h2{font-size:15px;color:#9ab;margin:18px 0 8px;font-weight:600}
+.row{display:flex;gap:10px;align-items:center;margin:8px 0;flex-wrap:wrap}
+.row label{flex:0 0 auto;min-width:120px;color:#ccc;font-size:14px}
+.row input[type=text],.row input[type=password],.row input[type=number],.row select,.row textarea{flex:1 1 180px;background:#111;border:1px solid #444;border-radius:10px;padding:10px;min-height:44px;font-size:16px}
+.row input[type=range]{flex:1 1 180px;min-height:32px}
+.row .val{min-width:56px;text-align:right;color:#9ab;font-variant-numeric:tabular-nums;font-size:14px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips button{min-height:36px;padding:6px 10px;font-size:13px;border-radius:999px}
+.note{font-size:12.5px;color:#888;line-height:1.5;margin:4px 0}
+#setupBar{position:fixed;left:0;right:0;bottom:0;padding:10px 16px calc(10px + env(safe-area-inset-bottom));background:linear-gradient(transparent,#000 35%);display:flex;gap:10px;justify-content:center}
+#setupBar button{flex:1 1 0;max-width:340px;font-size:18px;min-height:52px}
+#testOut{font-size:13px;color:#9ab;white-space:pre-wrap;word-break:break-all}
+#dbgPrev{max-width:100%;border:1px solid #444;display:none;margin-top:6px;background:#222}
+
+/* ---------- run ---------- */
+#run{background:#000;flex-direction:column;overflow:hidden}
+#run.active{display:flex}
+#run.rot{transform:rotate(180deg)}
+#topbar{flex:0 0 auto;display:flex;justify-content:space-between;gap:8px;padding:calc(8px + env(safe-area-inset-top)) 12px 4px;font-size:12px;color:#777;font-variant-numeric:tabular-nums;transition:opacity .4s}
+#status{display:inline-block;width:9px;height:9px;border-radius:50%;background:#555;margin-right:6px}
+#status.busy{background:#ffd60a}#status.ok{background:#30d158}#status.err{background:#ff453a}
+#stage{flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;padding:8px 18px;overflow:hidden}
+#stage.mirror #txt{transform:scaleX(-1)}
+#txt{text-align:center;width:100%;max-width:100%}
+#th{font-weight:700;color:#fff;line-height:1.28;text-wrap:balance;overflow-wrap:anywhere}
+#en{color:#9aa0a6;margin-top:.5em;line-height:1.3;text-wrap:balance}
+#th.idle{color:#333;font-weight:500}
+#errBanner{flex:0 0 auto;display:none;background:#5a1414;color:#ffd2d2;font-size:14px;padding:8px 14px;text-align:center}
+#dbg{flex:0 0 auto;display:none;max-height:70px;margin:0 auto 4px;border:1px solid #333;background:#111}
+#bar{flex:0 0 auto;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;padding:8px 10px calc(10px + env(safe-area-inset-bottom));transition:opacity .35s}
+#bar button{flex:0 0 auto;min-height:46px;font-size:15px}
+#run.hideui #bar,#run.hideui #topbar{opacity:0;pointer-events:none}
+#run.hideui #bar button{pointer-events:none}
+
+/* camera thumbnail while running */
+body.running #camWrap{position:fixed!important;top:calc(34px + env(safe-area-inset-top));left:8px;width:120px;z-index:5;border:1px solid #333;border-radius:8px;pointer-events:none;opacity:.9}
+body.running.rot #camWrap{top:auto;left:auto;right:8px;bottom:calc(74px + env(safe-area-inset-bottom))}
+body.running.nopreview #camWrap{opacity:0}
+body.running #cropBox{box-shadow:none;border-width:1px;cursor:default}
+body.running #cropBox .h,body.running #cropBox .lbl{display:none}
+body.running #setup{display:block;visibility:hidden;pointer-events:none;z-index:3;overflow:hidden}
+body.running #camWrap{visibility:visible}
+#run{z-index:2}
+body:not(.running):not(.insetup) #camWrap{display:none}
+</style>
+</head>
+<body>
+
+<!-- ============ welcome ============ -->
+<section id="welcome" class="view active">
+  <h1>แปลซับ PS5</h1>
+  <p>ใช้กล้องหลังของ iPhone ถ่ายซับอังกฤษบนทีวี แล้วให้ Gemini แปลเป็นไทยตัวใหญ่ ๆ บนหน้าจออีกด้าน (ตั้งแบบเต็นท์ได้)</p>
+  <button id="startBtn" class="primary">เริ่ม</button>
+  <div id="welcomeErr"></div>
+  <p style="font-size:12.5px">กดเริ่มแล้ว Safari จะขอสิทธิ์ใช้กล้อง ภาพจากกล้องไม่ถูกบันทึก ส่งเฉพาะแถบซับที่ครอปไปยัง Google Gemini API เท่านั้น</p>
+</section>
+
+<!-- ============ setup ============ -->
+<section id="setup" class="view">
+  <div class="camStage" id="camStage">
+    <div id="camWrap">
+      <video id="cam" playsinline muted autoplay webkit-playsinline></video>
+      <div id="cropBox">
+        <span class="lbl">กรอบซับ (ลากย้าย / ลากมุมปรับขนาด)</span>
+        <i class="h" data-h="nw"></i><i class="h" data-h="n"></i><i class="h" data-h="ne"></i>
+        <i class="h" data-h="e"></i><i class="h" data-h="se"></i><i class="h" data-h="s"></i>
+        <i class="h" data-h="sw"></i><i class="h" data-h="w"></i>
+      </div>
+    </div>
+    <div id="camMsg">กำลังเปิดกล้อง…</div>
+  </div>
+
+  <div class="panel">
+    <h2>1) กล้อง และ กรอบซับ</h2>
+    <p class="note">หันกล้องหลังไปที่ทีวี แล้วลากกรอบสีเหลืองให้ครอบเฉพาะแถบซับด้านล่างจอ (แคบ ๆ พอดีตัวอักษร จะแม่นและถูกกว่า) แตะ/ลากบนภาพนอกกรอบเพื่อวาดกรอบใหม่ — บันทึกอัตโนมัติ</p>
+    <div class="row" id="zoomRow" style="display:none">
+      <label>ซูมกล้อง</label>
+      <input type="range" id="zoom" min="1" max="5" step="0.1" value="1">
+      <span class="val" id="zoomVal">1.0x</span>
+    </div>
+    <p class="note" id="zoomNote"></p>
+    <div class="row">
+      <label>เลือกกล้อง</label>
+      <select id="camSel"><option value="">กล้องหลัง (อัตโนมัติ)</option></select>
+    </div>
+    <div class="row">
+      <label>ความละเอียดกล้อง</label>
+      <select id="res">
+        <option value="720">720p</option>
+        <option value="1080">1080p (แนะนำ)</option>
+        <option value="2160">4K (หนักเครื่อง)</option>
+      </select>
+    </div>
+    <div class="row">
+      <button id="resetCrop">รีเซ็ตกรอบ</button>
+      <button id="snapTest">ดูภาพที่จะส่ง</button>
+    </div>
+    <img id="dbgPrev" alt="">
+
+    <h2>2) Gemini API</h2>
+    <div class="row">
+      <label>API key</label>
+      <input type="password" id="key" placeholder="วางคีย์จาก aistudio.google.com" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <button id="keyShow" style="min-height:44px">แสดง</button>
+    </div>
+    <p class="note">คีย์เก็บในเครื่องนี้ (localStorage) เท่านั้น และส่งไปที่ generativelanguage.googleapis.com ที่เดียว ขอคีย์ฟรีได้ที่ aistudio.google.com/apikey</p>
+    <div class="row">
+      <label>โมเดล</label>
+      <input type="text" id="model" autocapitalize="off" autocorrect="off" spellcheck="false">
+    </div>
+    <div class="chips" id="presets"></div>
+    <div class="row" style="margin-top:12px">
+      <label>บริบทเกม</label>
+      <input type="text" id="game" placeholder="เช่น game: GTA VI / God of War (โทนเสียงตัวละคร)">
+    </div>
+    <div class="row">
+      <button id="testApi">ทดสอบคีย์ + โมเดล</button>
+    </div>
+    <div id="testOut"></div>
+
+    <h2>3) หน้าจอแปล</h2>
+    <div class="row">
+      <label>ขนาดตัวอักษรไทย</label>
+      <input type="range" id="fontSize" min="24" max="180" step="2">
+      <span class="val" id="fontSizeVal"></span>
+    </div>
+    <div class="row">
+      <label>ค้างข้อความหลังซับหาย</label>
+      <input type="range" id="hold" min="0" max="8" step="0.5">
+      <span class="val" id="holdVal"></span>
+    </div>
+    <div class="row">
+      <button id="setRot">หมุนจอ 180°</button>
+      <button id="setMirror">กลับซ้าย-ขวา</button>
+      <button id="setPrev">ซ่อนภาพกล้อง</button>
+    </div>
+
+    <h2>4) ขั้นสูง</h2>
+    <div class="row">
+      <label>เช็กภาพทุก (ms)</label>
+      <input type="range" id="interval" min="200" max="1500" step="50">
+      <span class="val" id="intervalVal"></span>
+    </div>
+    <div class="row">
+      <label>ความไวเปลี่ยนซับ</label>
+      <input type="range" id="sens" min="0.004" max="0.06" step="0.002">
+      <span class="val" id="sensVal"></span>
+    </div>
+    <div class="row">
+      <label>เว้นระหว่างคำขอ (ms)</label>
+      <input type="range" id="minGap" min="0" max="3000" step="100">
+      <span class="val" id="minGapVal"></span>
+    </div>
+    <div class="row">
+      <label>กว้างภาพที่ส่ง (px)</label>
+      <input type="range" id="maxW" min="320" max="1400" step="32">
+      <span class="val" id="maxWVal"></span>
+    </div>
+    <div class="row">
+      <label>Thinking</label>
+      <select id="thinking">
+        <option value="auto">อัตโนมัติ (เร็วสุดที่โมเดลรองรับ)</option>
+        <option value="minimal">minimal</option>
+        <option value="low">low</option>
+        <option value="none">ไม่ส่งค่า thinking</option>
+      </select>
+    </div>
+    <div class="row">
+      <label><input type="checkbox" id="skipBlank" style="min-height:0;width:20px;height:20px"> ข้ามเฟรมที่ไม่มีตัวอักษร (ประหยัด request)</label>
+    </div>
+    <div class="row">
+      <label><input type="checkbox" id="debugOn" style="min-height:0;width:20px;height:20px"> โชว์ภาพที่ส่งล่าสุดตอนแปล</label>
+    </div>
+    <p class="note" id="wlNote"></p>
+  </div>
+
+  <div id="setupBar">
+    <button id="toRun" class="primary">เริ่มแปล ▶</button>
+  </div>
+</section>
+
+<!-- ============ run ============ -->
+<section id="run" class="view">
+  <div id="topbar">
+    <span><i id="status"></i><span id="statTxt">พร้อม</span></span>
+    <span id="stats"></span>
+  </div>
+  <div id="errBanner"></div>
+  <div id="stage">
+    <div id="txt">
+      <div id="th" class="idle">รอซับ…</div>
+      <div id="en"></div>
+    </div>
+  </div>
+  <img id="dbg" alt="">
+  <div id="bar">
+    <button id="bSetup">⚙ ตั้งค่า</button>
+    <button id="bMinus">A−</button>
+    <button id="bPlus">A+</button>
+    <button id="bRot">หมุน 180°</button>
+    <button id="bMirror">กลับซ้าย-ขวา</button>
+    <button id="bPrev">ซ่อนกล้อง</button>
+    <button id="bPause">⏸ พัก</button>
+    <button id="bFull">เต็มจอ</button>
+  </div>
+</section>
+
+<script>
+'use strict';
+/* =========================================================
+   แปลซับ PS5 — กล้อง iPhone -> Gemini -> ซับไทย
+   ไม่มี build step / ไม่มี dependency / ไม่ติดต่อเซิร์ฟเวอร์อื่นนอกจาก
+   generativelanguage.googleapis.com (บังคับด้วย CSP connect-src)
+   ========================================================= */
+const $ = id => document.getElementById(id);
+
+/* ---------------- settings (localStorage only) ---------------- */
+const LS_PREFIX = 'ps5sub.';
+const DEFAULTS = {
+  key: '', model: 'gemini-3.5-flash-lite', game: '',
+  interval: 400, sens: 0.015, minGap: 800, hold: 2, maxW: 896, quality: 0.72,
+  fontSize: 64, rotate: false, mirror: false, hidePreview: false,
+  camId: '', res: '1080', thinking: 'auto', skipBlank: true, debug: false,
+  zoom: 1,
+  crop: { x: 0.08, y: 0.72, w: 0.84, h: 0.18 }
+};
+const S = {};
+for (const k in DEFAULTS) {
+  let v = DEFAULTS[k];
+  try { const raw = localStorage.getItem(LS_PREFIX + k); if (raw !== null) v = JSON.parse(raw); } catch (e) {}
+  S[k] = v;
+}
+function save(k) { try { localStorage.setItem(LS_PREFIX + k, JSON.stringify(S[k])); } catch (e) {} }
+
+const MODEL_PRESETS = [
+  ['gemini-3.5-flash-lite', 'เร็ว/ถูก (ค่าเริ่มต้น)'],
+  ['gemini-3.1-flash-lite', 'flash-lite รุ่นก่อน'],
+  ['gemini-3.6-flash', 'flash แม่นขึ้น'],
+  ['gemini-3.8-flash', 'flash ใหม่'],
+  ['gemini-4-hydrogen', 'Gemini 4 (ช้ากว่า)'],
+  ['gemini-flash-latest', 'alias ล่าสุด']
+];
+
+/* ---------------- state ---------------- */
+let stream = null, track = null, wakeLock = null;
+let mode = 'welcome';            // welcome | setup | run
+let running = false, paused = false, loopTimer = null;
+let ref = null, prev = null, unstable = 0;
+let inflight = null, reqId = 0;
+let blockedUntil = 0, errStreak = 0;
+let lastKey = '', clearTimer = null, noThinkSession = false;
+let lastReqAt = 0;
+const history = [];              // last 3 {en,th}
+const stats = { sent: 0, ok: 0, stale: 0, err: 0, same: 0, last: 0, lat: [] };
+
+/* ---------------- helpers ---------------- */
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+function norm(s) { return (s || '').toLowerCase().replace(/[^\p{L}\p{N}]+/gu, ''); }
+
+/* ---------------- views ---------------- */
+function setMode(m) {
+  mode = m;
+  for (const id of ['welcome', 'setup', 'run']) $(id).classList.toggle('active', id === m);
+  document.body.classList.toggle('running', m === 'run');
+  document.body.classList.toggle('insetup', m === 'setup');
+  if (m === 'setup') { running = false; clearTimeout(loopTimer); fitCam(); }
+  if (m === 'run') { applyRunLook(); showUI(); running = true; paused = false; $('bPause').textContent = '⏸ พัก'; resetLoopState(); loop(); }
+}
+
+/* ---------------- camera ---------------- */
+async function startCamera() {
+  stopCamera();
+  const dims = { 720: [1280, 720], 1080: [1920, 1080], 2160: [3840, 2160] }[S.res] || [1920, 1080];
+  const base = { width: { ideal: dims[0] }, height: { ideal: dims[1] } };
+  const tryGet = async v => navigator.mediaDevices.getUserMedia({ video: v, audio: false });
+  try {
+    if (S.camId) stream = await tryGet({ ...base, deviceId: { exact: S.camId } });
+    else stream = await tryGet({ ...base, facingMode: { ideal: 'environment' } });
+  } catch (e) {
+    if (S.camId) { S.camId = ''; save('camId'); stream = await tryGet({ ...base, facingMode: { ideal: 'environment' } }); }
+    else if (e && e.name === 'OverconstrainedError') stream = await tryGet({ facingMode: { ideal: 'environment' } });
+    else throw e;
+  }
+  track = stream.getVideoTracks()[0];
+  const cam = $('cam');
+  cam.srcObject = stream;
+  await new Promise(res => { if (cam.readyState >= 1) res(); else cam.onloadedmetadata = () => res(); });
+  try { await cam.play(); } catch (e) {}
+  $('camMsg').style.display = 'none';
+  fitCam();
+  setupZoom();
+  tryContinuousFocus();
+  listCameras();
+}
+function stopCamera() {
+  if (stream) stream.getTracks().forEach(t => t.stop());
+  stream = null; track = null;
+}
+async function tryContinuousFocus() {
+  try {
+    const caps = track.getCapabilities ? track.getCapabilities() : {};
+    if (caps.focusMode && caps.focusMode.includes('continuous'))
+      await track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] });
+  } catch (e) {}
+}
+function setupZoom() {
+  const row = $('zoomRow'), note = $('zoomNote');
+  let caps = {};
+  try { caps = track.getCapabilities ? track.getCapabilities() : {}; } catch (e) {}
+  if (caps.zoom && typeof caps.zoom.max === 'number' && caps.zoom.max > caps.zoom.min) {
+    const z = $('zoom');
+    z.min = caps.zoom.min; z.max = caps.zoom.max; z.step = caps.zoom.step || 0.1;
+    const cur = (track.getSettings && track.getSettings().zoom) || S.zoom || caps.zoom.min;
+    z.value = clamp(S.zoom || cur, caps.zoom.min, caps.zoom.max);
+    row.style.display = 'flex'; note.textContent = '';
+    applyZoom(+z.value);
+  } else {
+    row.style.display = 'none';
+    note.textContent = 'กล้อง/เบราว์เซอร์นี้ไม่เปิดให้ซูมจากเว็บ — ใช้ดิจิทัลครอปแทน (ครอปจากภาพความละเอียดเต็ม) ถ้าซับเล็กไป ให้ขยับ iPhone เข้าใกล้ทีวีหรือเลือก "กล้องเทเลโฟโต้" ในช่องเลือกกล้อง';
+  }
+}
+async function applyZoom(v) {
+  $('zoomVal').textContent = (+v).toFixed(1) + 'x';
+  try { await track.applyConstraints({ advanced: [{ zoom: +v }] }); S.zoom = +v; save('zoom'); } catch (e) {}
+}
+async function listCameras() {
+  try {
+    const devs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput');
+    const sel = $('camSel'), cur = (track && track.getSettings && track.getSettings().deviceId) || '';
+    sel.innerHTML = '<option value="">กล้องหลัง (อัตโนมัติ)</option>';
+    devs.forEach((d, i) => {
+      const o = document.createElement('option');
+      o.value = d.deviceId; o.textContent = d.label || ('กล้อง ' + (i + 1));
+      sel.appendChild(o);
+    });
+    sel.value = S.camId && devs.some(d => d.deviceId === S.camId) ? S.camId : '';
+  } catch (e) {}
+}
+function fitCam() {
+  const cam = $('cam'), wrap = $('camWrap');
+  const vw = cam.videoWidth || 16, vh = cam.videoHeight || 9;
+  if (mode === 'run') { wrap.style.width = ''; wrap.style.height = (120 * vh / vw) + 'px'; return; }
+  const st = $('camStage');
+  const cw = st.clientWidth, ch = st.clientHeight - (parseFloat(getComputedStyle(st).paddingTop) || 0);
+  const s = Math.min(cw / vw, ch / vh);
+  wrap.style.width = Math.floor(vw * s) + 'px';
+  wrap.style.height = Math.floor(vh * s) + 'px';
+}
+window.addEventListener('resize', () => { fitCam(); fitText(); });
+$('cam').addEventListener('resize', fitCam);
+$('cam').addEventListener('loadedmetadata', fitCam);
+
+/* ---------------- crop box ---------------- */
+function drawCrop() {
+  const c = S.crop, b = $('cropBox');
+  b.style.left = (c.x * 100) + '%'; b.style.top = (c.y * 100) + '%';
+  b.style.width = (c.w * 100) + '%'; b.style.height = (c.h * 100) + '%';
+}
+(function bindCrop() {
+  const wrap = $('camWrap'); let drag = null;
+  const pt = e => { const r = wrap.getBoundingClientRect(); return { x: clamp((e.clientX - r.left) / r.width, 0, 1), y: clamp((e.clientY - r.top) / r.height, 0, 1) }; };
+  const MIN = 0.02;
+  function setEdges(l, t, r, b) {
+    if (l > r) [l, r] = [r, l];
+    if (t > b) [t, b] = [b, t];
+    l = clamp(l, 0, 1 - MIN); t = clamp(t, 0, 1 - MIN);
+    r = clamp(r, l + MIN, 1); b = clamp(b, t + MIN, 1);
+    S.crop = { x: l, y: t, w: r - l, h: b - t };
+    drawCrop();
+  }
+  wrap.addEventListener('pointerdown', e => {
+    if (mode !== 'setup') return;
+    const p = pt(e), h = e.target.dataset && e.target.dataset.h, o = S.crop;
+    if (h) drag = { type: 'resize', h, o };
+    else if (e.target === $('cropBox')) drag = { type: 'move', s: p, o };
+    else { drag = { type: 'new', s: p }; setEdges(p.x, p.y, p.x + MIN, p.y + MIN); }
+    wrap.setPointerCapture(e.pointerId); e.preventDefault();
+  });
+  wrap.addEventListener('pointermove', e => {
+    if (!drag) return;
+    const p = pt(e), o = drag.o;
+    if (drag.type === 'move') {
+      const x = clamp(o.x + p.x - drag.s.x, 0, 1 - o.w), y = clamp(o.y + p.y - drag.s.y, 0, 1 - o.h);
+      S.crop = { x, y, w: o.w, h: o.h }; drawCrop();
+    } else if (drag.type === 'new') setEdges(drag.s.x, drag.s.y, p.x, p.y);
+    else {
+      let l = o.x, t = o.y, r = o.x + o.w, b = o.y + o.h;
+      if (drag.h.includes('w')) l = p.x;
+      if (drag.h.includes('e')) r = p.x;
+      if (drag.h.includes('n')) t = p.y;
+      if (drag.h.includes('s')) b = p.y;
+      setEdges(l, t, r, b);
+    }
+  });
+  const end = () => { if (drag) { drag = null; save('crop'); resetLoopState(); } };
+  wrap.addEventListener('pointerup', end); wrap.addEventListener('pointercancel', end);
+})();
+
+/* ---------------- frame capture / diff ---------------- */
+const small = document.createElement('canvas'), sctx = small.getContext('2d', { willReadFrequently: true });
+const big = document.createElement('canvas'), bctx = big.getContext('2d');
+function grab() {
+  const cam = $('cam'), vw = cam.videoWidth, vh = cam.videoHeight;
+  if (!vw || !vh || cam.readyState < 2) return null;
+  const c = S.crop;
+  const sx = c.x * vw, sy = c.y * vh, sw = Math.max(8, c.w * vw), sh = Math.max(8, c.h * vh);
+  const dw = 256, dh = clamp(Math.round(dw * sh / sw), 16, 128);
+  if (small.width !== dw || small.height !== dh) { small.width = dw; small.height = dh; }
+  sctx.drawImage(cam, sx, sy, sw, sh, 0, 0, dw, dh);
+  const d = sctx.getImageData(0, 0, dw, dh).data, n = dw * dh, g = new Uint8Array(n);
+  for (let i = 0, j = 0; i < n; i++, j += 4) g[i] = (d[j] * 77 + d[j + 1] * 151 + d[j + 2] * 28) >> 8;
+  return { g, w: dw, h: dh, sx, sy, sw, sh };
+}
+// fraction of pixels whose gray value moved by > 40 levels
+function diff(a, b) {
+  if (!a || !b || a.g.length !== b.g.length) return 1;
+  let c = 0; const x = a.g, y = b.g;
+  for (let i = 0; i < x.length; i++) { const d = x[i] - y[i]; if (d > 40 || d < -40) c++; }
+  return c / x.length;
+}
+// rough "is there any text-like detail" test: horizontal edge density
+function hasText(f) {
+  const { g, w, h } = f; let e = 0;
+  for (let y = 0; y < h; y++) { const o = y * w; for (let x = 1; x < w; x++) { const d = g[o + x] - g[o + x - 1]; if (d > 50 || d < -50) e++; } }
+  return e / (w * h) > 0.004;
+}
+function encodeJpeg(f) {
+  const cam = $('cam');
+  const scale = Math.min(S.maxW / f.sw, 2);
+  const w = Math.max(16, Math.round(f.sw * scale)), h = Math.max(16, Math.round(f.sh * scale));
+  big.width = w; big.height = h;
+  bctx.imageSmoothingQuality = 'high';
+  bctx.drawImage(cam, f.sx, f.sy, f.sw, f.sh, 0, 0, w, h);
+  const url = big.toDataURL('image/jpeg', S.quality);
+  return { b64: url.slice(url.indexOf(',') + 1), url, w, h };
+}
+
+/* ---------------- Gemini ---------------- */
+const SYSTEM_PROMPT =
+  'You are a real-time subtitle reader and translator for video games. ' +
+  'The image is a cropped strip of a TV screen showing the game\'s on-screen subtitle. ' +
+  'Read the English subtitle text exactly as shown (join multiple lines into one sentence; ignore HUD, menus, logos, watermarks and any non-subtitle text). ' +
+  'Then translate it into natural, spoken Thai suited to game dialogue: keep the speaker\'s tone, keep proper names and game terms recognisable, and never add explanations. ' +
+  'If there is no readable English subtitle in the image, return empty strings. ' +
+  'Reply with JSON only: {"en": "<English text>", "th": "<Thai translation>"}.';
+
+function userPrompt() {
+  let t = '';
+  if (S.game.trim()) t += 'Context: ' + S.game.trim() + '\n';
+  if (history.length) {
+    t += 'Previous subtitle lines (for tone and continuity only; do not repeat them unless they are in the image):\n';
+    history.forEach((h, i) => { t += (i + 1) + '. EN: ' + h.en + ' | TH: ' + h.th + '\n'; });
+  }
+  t += 'Read and translate the subtitle in the attached image.';
+  return t;
+}
+function thinkingCfg() {
+  if (noThinkSession || S.thinking === 'none') return null;
+  const m = S.model.toLowerCase();
+  if (S.thinking === 'minimal') return { thinkingLevel: 'MINIMAL' };
+  if (S.thinking === 'low') return { thinkingLevel: 'LOW' };
+  if (/2\.5-flash/.test(m)) return { thinkingBudget: 0 };
+  if (/gemini-(3\.5|3\.1)-flash-lite|3\.6-flash|3-flash/.test(m)) return { thinkingLevel: 'MINIMAL' };
+  if (/gemini-(3\.8|4)/.test(m)) return { thinkingLevel: 'LOW' };
+  return null;
+}
+function modelPath() { return 'models/' + encodeURIComponent(S.model.trim().replace(/^models\//, '')); }
+function buildBody(parts) {
+  const gc = { temperature: 0.2, responseMimeType: 'application/json', maxOutputTokens: 1024 };
+  const tc = thinkingCfg(); if (tc) gc.thinkingConfig = tc;
+  return {
+    systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+    contents: [{ role: 'user', parts }],
+    generationConfig: gc
+  };
+}
+class ApiError extends Error { constructor(status, msg, retry) { super(msg); this.status = status; this.retryMs = retry; } }
+async function gemini(parts, signal, retried) {
+  const url = 'https://generativelanguage.googleapis.com/v1beta/' + modelPath() + ':generateContent';
+  let res;
+  try {
+    res = await fetch(url, {
+      method: 'POST', signal, referrerPolicy: 'no-referrer',
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': S.key.trim() },
+      body: JSON.stringify(buildBody(parts))
+    });
+  } catch (e) {
+    if (e.name === 'AbortError') throw e;
+    throw new ApiError(0, 'เชื่อมต่อ Gemini ไม่ได้ (เน็ต/คีย์?)', 0);
+  }
+  if (!res.ok) {
+    let msg = 'HTTP ' + res.status, retry = 0, j = null;
+    try { j = await res.json(); } catch (e) {}
+    if (j && j.error) {
+      msg = j.error.message || msg;
+      const d = (j.error.details || []).find(x => x.retryDelay);
+      if (d) { const m = /([\d.]+)s/.exec(d.retryDelay); if (m) retry = Math.ceil(+m[1] * 1000); }
+    }
+    if (res.status === 400 && /thinking/i.test(msg) && !noThinkSession && !retried) {
+      noThinkSession = true; return gemini(parts, signal, true);   // model refuses thinkingConfig -> retry without
+    }
+    throw new ApiError(res.status, msg, retry);
+  }
+  const j = await res.json();
+  const cand = j.candidates && j.candidates[0];
+  if (!cand) {
+    const br = j.promptFeedback && j.promptFeedback.blockReason;
+    if (br) throw new ApiError(0, 'ถูกบล็อก: ' + br, 0);
+    return { en: '', th: '' };
+  }
+  const text = ((cand.content && cand.content.parts) || []).filter(p => !p.thought && typeof p.text === 'string').map(p => p.text).join('');
+  return parseResult(text);
+}
+function parseResult(t) {
+  t = (t || '').trim().replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '');
+  let o = null;
+  try { o = JSON.parse(t); } catch (e) {
+    const m = t.match(/\{[\s\S]*\}/); if (m) { try { o = JSON.parse(m[0]); } catch (e2) {} }
+  }
+  if (Array.isArray(o)) o = o[0];
+  if (!o || typeof o !== 'object') return { en: '', th: '' };
+  return { en: String(o.en || '').trim(), th: String(o.th || '').trim() };
+}
+
+/* ---------------- main loop ---------------- */
+function resetLoopState() { ref = null; prev = null; unstable = 0; }
+function loop() {
+  clearTimeout(loopTimer);
+  if (!running) return;
+  try { tick(); } catch (e) { console.error(e); }
+  loopTimer = setTimeout(loop, S.interval);
+}
+function tick() {
+  updateStats();
+  if (paused) return;
+  const f = grab(); if (!f) return;
+  const now = performance.now();
+  const wasPrev = prev; prev = f;
+
+  // no text-like detail in the strip -> don't call the API
+  if (S.skipBlank && !hasText(f)) {
+    ref = f; unstable = 0;
+    if (!clearTimer && $('th').textContent && !$('th').classList.contains('idle')) scheduleClear();
+    return;
+  }
+  const changed = !ref || diff(f, ref) > S.sens;
+  if (!changed) { unstable = 0; return; }
+  const stable = wasPrev && diff(f, wasPrev) < Math.max(0.006, S.sens * 0.6);
+  if (!stable && ++unstable < 5) return;          // wait a frame for the subtitle to settle (max ~5 frames)
+  unstable = 0;
+
+  if (inflight) { inflight.stale = true; return; }  // newer subtitle appeared: current answer is stale, re-send after it returns
+  if (now < blockedUntil) return;
+  if (now - lastReqAt < S.minGap) return;
+  if (!S.key.trim()) { showError('ยังไม่ได้ใส่ Gemini API key (กด ⚙ ตั้งค่า)'); return; }
+  ref = f;
+  send(f);
+}
+async function send(f) {
+  const img = encodeJpeg(f);
+  if (S.debug) { $('dbg').src = img.url; $('dbg').style.display = 'block'; }
+  const my = { id: ++reqId, stale: false, ctrl: new AbortController(), t0: performance.now() };
+  inflight = my; lastReqAt = my.t0; stats.sent++;
+  setStatus('busy', 'กำลังแปล…');
+  const timer = setTimeout(() => my.ctrl.abort(), 20000);
+  try {
+    const r = await gemini([{ text: userPrompt() }, { inline_data: { mime_type: 'image/jpeg', data: img.b64 } }], my.ctrl.signal);
+    const ms = performance.now() - my.t0;
+    stats.last = ms; stats.lat.push(ms); if (stats.lat.length > 10) stats.lat.shift();
+    errStreak = 0; hideError();
+    if (my.stale) { stats.stale++; setStatus('ok', 'ทิ้งผลเก่า'); }
+    else { stats.ok++; setStatus('ok', 'พร้อม'); applyResult(r); }
+  } catch (e) {
+    stats.err++;
+    if (e.name === 'AbortError') { showError('คำขอหมดเวลา (20 วิ) จะลองใหม่'); backoff(0); }
+    else if (e instanceof ApiError) {
+      const st = e.status;
+      let label = e.message;
+      if (st === 429) label = 'โควต้า/ความเร็วเกิน (429): ' + e.message;
+      else if (st === 503 || st === 500) label = 'Gemini ไม่ว่าง (' + st + '): ' + e.message;
+      else if (st === 400 || st === 403) label = 'คีย์/คำขอไม่ถูกต้อง (' + st + '): ' + e.message;
+      else if (st === 404) label = 'ไม่พบโมเดล "' + S.model + '" (404) — ลองเลือกโมเดลอื่น';
+      const wait = backoff(e.retryMs, st === 400 || st === 403 || st === 404);
+      showError(label.slice(0, 220) + '  [รอ ' + Math.ceil(wait / 1000) + ' วิ]');
+    } else { console.error(e); showError('ผิดพลาด: ' + (e.message || e)); backoff(0); }
+    setStatus('err', 'ผิดพลาด');
+    ref = null;  // force a re-evaluation after the error
+  } finally {
+    clearTimeout(timer);
+    if (inflight === my) inflight = null;
+  }
+}
+function backoff(retryMs, hard) {
+  errStreak++;
+  const wait = Math.max(retryMs || 0, hard ? 10000 : Math.min(30000, 2000 * Math.pow(2, errStreak - 1)));
+  blockedUntil = performance.now() + wait;
+  return wait;
+}
+
+/* ---------------- result / display ---------------- */
+function applyResult(r) {
+  const en = (r.en || '').trim(), th = (r.th || '').trim();
+  if (!en && !th) { scheduleClear(); return; }
+  cancelClear();
+  const key = norm(en || th);
+  if (key === lastKey) { stats.same++; return; }
+  lastKey = key;
+  showText(en, th);
+  history.push({ en, th }); while (history.length > 3) history.shift();
+}
+function showText(en, th) {
+  const t = $('th'); t.classList.remove('idle');
+  t.textContent = th || en; $('en').textContent = th ? en : '';
+  fitText();
+}
+function scheduleClear() {
+  if (clearTimer) return;
+  clearTimer = setTimeout(() => {
+    clearTimer = null; lastKey = '';
+    const t = $('th'); t.textContent = ''; t.classList.remove('idle'); $('en').textContent = '';
+  }, Math.max(0, S.hold * 1000));
+}
+function cancelClear() { if (clearTimer) { clearTimeout(clearTimer); clearTimer = null; } }
+function fitText() {
+  const st = $('stage'), th = $('th'), en = $('en'), inner = $('txt');
+  if (mode !== 'run') return;
+  let fs = S.fontSize;
+  const avail = st.clientHeight - 16;
+  for (let i = 0; i < 40; i++) {
+    th.style.fontSize = fs + 'px'; en.style.fontSize = Math.max(14, fs * 0.38) + 'px';
+    if (inner.offsetHeight <= avail || fs <= 20) break;
+    fs *= 0.92;
+  }
+}
+function setStatus(cls, txt) { $('status').className = cls; $('statTxt').textContent = txt; }
+function showError(m) { const b = $('errBanner'); b.textContent = m; b.style.display = 'block'; }
+function hideError() { $('errBanner').style.display = 'none'; }
+function updateStats() {
+  const avg = stats.lat.length ? stats.lat.reduce((a, b) => a + b, 0) / stats.lat.length : 0;
+  $('stats').textContent = 'คำขอ ' + stats.sent + ' · ล่าสุด ' + Math.round(stats.last) + 'ms · เฉลี่ย ' + Math.round(avg) + 'ms' +
+    (stats.stale ? ' · ทิ้ง ' + stats.stale : '') + (stats.err ? ' · ผิดพลาด ' + stats.err : '');
+  if (performance.now() < blockedUntil && inflight === null) {
+    $('statTxt').textContent = 'รอลองใหม่ ' + Math.ceil((blockedUntil - performance.now()) / 1000) + ' วิ';
+  }
+}
+
+/* ---------------- run UI ---------------- */
+let uiTimer = null;
+function showUI() {
+  $('run').classList.remove('hideui');
+  clearTimeout(uiTimer); uiTimer = setTimeout(() => $('run').classList.add('hideui'), 7000);
+}
+function applyRunLook() {
+  $('run').classList.toggle('rot', S.rotate);
+  document.body.classList.toggle('rot', S.rotate);
+  $('stage').classList.toggle('mirror', S.mirror);
+  document.body.classList.toggle('nopreview', S.hidePreview);
+  $('bRot').classList.toggle('on', S.rotate); $('bMirror').classList.toggle('on', S.mirror);
+  $('bPrev').classList.toggle('on', S.hidePreview); $('bPrev').textContent = S.hidePreview ? 'แสดงกล้อง' : 'ซ่อนกล้อง';
+  $('setRot').classList.toggle('on', S.rotate); $('setMirror').classList.toggle('on', S.mirror);
+  $('setPrev').classList.toggle('on', S.hidePreview); $('setPrev').textContent = S.hidePreview ? 'แสดงภาพกล้อง' : 'ซ่อนภาพกล้อง';
+  $('dbg').style.display = S.debug && $('dbg').src ? 'block' : 'none';
+  fitCam(); fitText();
+}
+function toggle(k) { S[k] = !S[k]; save(k); applyRunLook(); }
+function bumpFont(d) { S.fontSize = clamp(S.fontSize + d, 24, 180); save('fontSize'); $('fontSize').value = S.fontSize; $('fontSizeVal').textContent = S.fontSize + 'px'; fitText(); }
+
+/* ---------------- wake lock ---------------- */
+async function lockScreen() {
+  try {
+    if ('wakeLock' in navigator) {
+      wakeLock = await navigator.wakeLock.request('screen');
+      $('wlNote').textContent = 'Wake Lock: เปิดอยู่ (หน้าจอจะไม่ดับระหว่างใช้งาน)';
+      wakeLock.addEventListener('release', () => { wakeLock = null; });
+    } else $('wlNote').textContent = 'Wake Lock: เบราว์เซอร์นี้ไม่รองรับ — ตั้ง ตั้งค่า > จอภาพ > ล็อคอัตโนมัติ เป็น "ไม่เคย" ชั่วคราว';
+  } catch (e) { $('wlNote').textContent = 'Wake Lock: เปิดไม่สำเร็จ (' + (e.name || e) + ') — ตั้ง ล็อคอัตโนมัติ เป็น "ไม่เคย" ชั่วคราว'; }
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && mode !== 'welcome') {
+    lockScreen();
+    const cam = $('cam'); if (cam.srcObject && cam.paused) cam.play().catch(() => {});
+  }
+});
+
+/* ---------------- test API ---------------- */
+async function testApi() {
+  const out = $('testOut');
+  if (!S.key.trim()) { out.textContent = 'ใส่ API key ก่อน'; return; }
+  out.textContent = 'กำลังทดสอบ…';
+  const t0 = performance.now();
+  try {
+    const ctrl = new AbortController(); const tm = setTimeout(() => ctrl.abort(), 20000);
+    const r = await gemini([{ text: 'Reply with JSON {"en":"Hello, world","th":"สวัสดีชาวโลก"} exactly.' }], ctrl.signal);
+    clearTimeout(tm);
+    out.textContent = '✓ ใช้ได้ (' + Math.round(performance.now() - t0) + ' ms) → ' + JSON.stringify(r);
+  } catch (e) { out.textContent = '✗ ' + (e.status ? '[' + e.status + '] ' : '') + (e.message || e); }
+}
+
+/* ---------------- bindings ---------------- */
+function bindInput(id, key, kind) {
+  const el = $(id), valEl = $(id + 'Val');
+  const show = () => {
+    if (valEl) {
+      let t = S[key];
+      if (key === 'fontSize') t = t + 'px';
+      else if (key === 'hold') t = t + ' วิ';
+      else if (key === 'interval' || key === 'minGap') t = t + 'ms';
+      else if (key === 'sens') t = (S.sens * 100).toFixed(1) + '%';
+      else if (key === 'maxW') t = t + 'px';
+      valEl.textContent = t;
+    }
+  };
+  if (kind === 'check') el.checked = !!S[key]; else el.value = S[key];
+  show();
+  el.addEventListener('input', () => {
+    S[key] = kind === 'check' ? el.checked : kind === 'num' ? +el.value : el.value;
+    save(key); show();
+    if (key === 'fontSize') fitText();
+    if (key === 'debug') applyRunLook();
+    if (key === 'model') noThinkSession = false;
+  });
+}
+bindInput('key', 'key'); bindInput('model', 'model'); bindInput('game', 'game');
+bindInput('fontSize', 'fontSize', 'num'); bindInput('hold', 'hold', 'num');
+bindInput('interval', 'interval', 'num'); bindInput('sens', 'sens', 'num');
+bindInput('minGap', 'minGap', 'num'); bindInput('maxW', 'maxW', 'num');
+bindInput('thinking', 'thinking'); bindInput('skipBlank', 'skipBlank', 'check'); bindInput('debugOn', 'debug', 'check');
+bindInput('res', 'res');
+
+const presets = $('presets');
+MODEL_PRESETS.forEach(([m, d]) => {
+  const b = document.createElement('button'); b.textContent = m; b.title = d;
+  b.addEventListener('click', () => { S.model = m; save('model'); $('model').value = m; noThinkSession = false; });
+  presets.appendChild(b);
+});
+$('keyShow').addEventListener('click', () => {
+  const k = $('key'); const show = k.type === 'password'; k.type = show ? 'text' : 'password'; $('keyShow').textContent = show ? 'ซ่อน' : 'แสดง';
+});
+$('zoom').addEventListener('input', e => applyZoom(+e.target.value));
+$('camSel').addEventListener('change', async e => {
+  S.camId = e.target.value; save('camId');
+  try { await startCamera(); } catch (err) { $('camMsg').style.display = 'flex'; $('camMsg').textContent = 'เปิดกล้องไม่ได้: ' + (err.message || err.name); }
+});
+$('res').addEventListener('change', async () => {
+  try { await startCamera(); } catch (err) { $('camMsg').style.display = 'flex'; $('camMsg').textContent = 'เปิดกล้องไม่ได้: ' + (err.message || err.name); }
+});
+$('resetCrop').addEventListener('click', () => { S.crop = { ...DEFAULTS.crop }; save('crop'); drawCrop(); });
+$('snapTest').addEventListener('click', () => {
+  const f = grab(); if (!f) return;
+  const img = encodeJpeg(f), p = $('dbgPrev'); p.src = img.url; p.style.display = 'block';
+});
+$('testApi').addEventListener('click', testApi);
+$('setRot').addEventListener('click', () => toggle('rotate'));
+$('setMirror').addEventListener('click', () => toggle('mirror'));
+$('setPrev').addEventListener('click', () => toggle('hidePreview'));
+
+$('startBtn').addEventListener('click', async () => {
+  const err = $('welcomeErr'); err.textContent = '';
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    err.textContent = 'เบราว์เซอร์นี้ไม่รองรับกล้อง (ต้องเปิดผ่าน HTTPS ใน Safari)'; return;
+  }
+  $('startBtn').disabled = true;
+  try {
+    setMode('setup'); $('camMsg').style.display = 'flex'; $('camMsg').textContent = 'กำลังเปิดกล้อง… กด "อนุญาต" ถ้า Safari ถาม';
+    lockScreen();
+    await startCamera();
+    drawCrop();
+  } catch (e) {
+    setMode('welcome');
+    err.textContent = 'เปิดกล้องไม่ได้: ' + (e.name === 'NotAllowedError' ? 'ยังไม่ได้อนุญาตกล้อง (ตั้งค่า > Safari > กล้อง)' : (e.message || e.name));
+  } finally { $('startBtn').disabled = false; }
+});
+$('toRun').addEventListener('click', () => {
+  if (!S.key.trim()) { $('key').scrollIntoView({ behavior: 'smooth', block: 'center' }); $('key').focus(); $('testOut').textContent = 'ใส่ Gemini API key ก่อนเริ่มแปล'; return; }
+  if (!stream) { startCamera().then(() => setMode('run')).catch(e => { $('testOut').textContent = 'เปิดกล้องไม่ได้: ' + e.message; }); return; }
+  setMode('run');
+});
+$('bSetup').addEventListener('click', e => { e.stopPropagation(); setMode('setup'); drawCrop(); });
+$('bMinus').addEventListener('click', e => { e.stopPropagation(); bumpFont(-8); showUI(); });
+$('bPlus').addEventListener('click', e => { e.stopPropagation(); bumpFont(8); showUI(); });
+$('bRot').addEventListener('click', e => { e.stopPropagation(); toggle('rotate'); showUI(); });
+$('bMirror').addEventListener('click', e => { e.stopPropagation(); toggle('mirror'); showUI(); });
+$('bPrev').addEventListener('click', e => { e.stopPropagation(); toggle('hidePreview'); showUI(); });
+$('bPause').addEventListener('click', e => {
+  e.stopPropagation(); paused = !paused; $('bPause').textContent = paused ? '▶ เล่นต่อ' : '⏸ พัก';
+  setStatus(paused ? '' : 'ok', paused ? 'พักอยู่' : 'พร้อม'); showUI();
+});
+$('bFull').addEventListener('click', e => {
+  e.stopPropagation();
+  const d = document.documentElement;
+  if (document.fullscreenElement) document.exitFullscreen(); else if (d.requestFullscreen) d.requestFullscreen().catch(() => {});
+  else if (d.webkitRequestFullscreen) d.webkitRequestFullscreen();
+  else alert('iPhone ไม่รองรับเต็มจอจากเว็บ — กด แชร์ > เพิ่มไปยังหน้าจอโฮม แล้วเปิดจากไอคอน');
+  showUI();
+});
+$('run').addEventListener('click', showUI);
+drawCrop(); applyRunLook();
+</script>
+</body>
+</html>
